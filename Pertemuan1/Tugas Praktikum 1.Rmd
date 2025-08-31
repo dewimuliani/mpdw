@@ -125,7 +125,7 @@ ggplot() +
 ```
 
 ### Metode Pemulusan Double Exponential Smoothing (DES)
-Digunakan metode double exponential smoothing pada data ini dikarenakan data menunjukkan pola tren (tidak konstan). DES mampu menangkap komponen level dan tren sehingga lebih sesuai dibanding metode sederhana (SES) atau moving average.
+Digunakan metode double exponential smoothing pada data ini dikarenakan data kopi pada eksplorasi menunjukkan pola tren (tidak konstan). DES mampu menangkap komponen level dan tren sehingga lebih sesuai dibanding metode sederhana (SES) atau moving average.
 
 ```{r}
 # Model DES dengan parameter optimum
@@ -155,10 +155,14 @@ ramalandes2
 ```
 
 ```{r}
-# membandingkan plot data latih dan data uji dengan Model DES 2 dikarenakan ramalan mengikuti pola data uji dengan cukup baik
+# membandingkan plot data latih dan data uji dengan Model DES 2 dan optimum dikarenakan ramalan mengikuti pola data uji dengan cukup baik
 plot(data_coffee_sub.ts)
 lines(des.2$fitted[,1], lty=2, col="blue")
 lines(ramalandes2$mean, col="red")
+
+plot(data_coffee_sub.ts)
+lines(des.opt$fitted[,1], lty=2, col="blue")
+lines(ramalandesopt$mean, col="red")
 ```
 
 #### Akurasi Data Latih
@@ -189,7 +193,7 @@ row.names(akurasides.2)<- c("SSE", "MSE", "MAPE")
 colnames(akurasides.2) <- c("Akurasi lamda=0.6 dan gamma=0.3")
 akurasides.2
 ```
-Hasil akurasi dari data latih didapatkan skenario 2 dengan lamda = 0.6 dan gamma = 0.3 memiliki hasil yang lebih baik dibandingkan dengan skenario 1 berdasarkan nilai MAPE-nya. Namun untuk kedua skenario dapat dikategorikan peramalan baik berdasarkan nilai MAPE-nya.
+Hasil akurasi dari data latih didapatkan skenario 2 dengan lamda = 0.6 dan gamma = 0.3 memiliki hasil yang lebih baik dibandingkan dengan skenario 1 berdasarkan nilai MAPE-nya. Namun untuk kedua skenario dapat dikategorikan peramalan baik berdasarkan nilai MAPE-nya (dibawah 20%).
 
 #### Akurasi Data Uji
 ```{r}
@@ -224,5 +228,135 @@ akurasitestingdes
 ```
 Berdasarkan hasil akurasi data uji, hasil analisis menunjukkan bahwa model Double Exponential Smoothing (DES) skenario 2 dengan parameter α = 0.6 dan β = 0.3 dan skenario optimum memberikan performa terbaik dibandingkan skenario 1. Hal ini terlihat dari nilai MAPE pada data uji yang berada di bawah 20%, sehingga model dapat dikategorikan cukup akurat dalam memprediksi harga kopi. Dengan demikian, model ini layak dijadikan acuan untuk peramalan harga kopi ke depan, terutama karena data menunjukkan adanya pola tren yang sesuai dengan pendekatan DES.
 
+### Membandingkan dengan Metode Pemulusan SES (Single Exponential Smoothing)
+```{r}
+ses1<- HoltWinters(train.ts, gamma = FALSE, beta = FALSE, alpha = 0.2)
+plot(ses1)
 
+# ramalan
+ramalan1<- forecast(ses1, h=20)
+ramalan1
 
+ses2<- HoltWinters(train.ts, gamma = FALSE, beta = FALSE, alpha = 0.7)
+plot(ses2)
+
+# ramalan
+ramalan2<- forecast(ses2, h=20)
+ramalan2
+
+sesopt<- HoltWinters(train.ts, gamma = FALSE, beta = FALSE,alpha = NULL)
+sesopt
+plot(sesopt)
+
+# ramalan
+ramalanopt<- forecast(sesopt, h=20)
+ramalanopt
+```
+
+```{r}
+# Akurasi Data Training
+
+## Pada data training
+SSE1<-ses1$SSE
+MSE1<-ses1$SSE/length(train.ts)
+RMSE1<-sqrt(MSE1)
+
+akurasi1 <- matrix(c(SSE1,MSE1,RMSE1))
+row.names(akurasi1)<- c("SSE", "MSE", "RMSE")
+colnames(akurasi1) <- c("Akurasi lamda=0.2")
+akurasi1
+
+SSE2<-ses2$SSE
+MSE2<-ses2$SSE/length(train.ts)
+RMSE2<-sqrt(MSE2)
+
+akurasi2 <- matrix(c(SSE2,MSE2,RMSE2))
+row.names(akurasi2)<- c("SSE", "MSE", "RMSE")
+colnames(akurasi2) <- c("Akurasi lamda=0.7")
+akurasi2
+
+## Cara Manual
+fitted1<-ramalan1$fitted
+sisaan1<-ramalan1$residuals
+head(sisaan1)
+
+resid1<-training$Harga-ramalan1$fitted
+head(resid1)
+ SSE.1=sum(sisaan1[2:length(train.ts)]^2)
+SSE.1
+
+MSE.1 = SSE.1/length(train.ts)
+MSE.1
+
+MAPE.1 = sum(abs(sisaan1[2:length(train.ts)]/train.ts[2:length(train.ts)])*
+               100)/length(train.ts)
+MAPE.1
+
+akurasi.1 <- matrix(c(SSE.1,MSE.1,MAPE.1))
+row.names(akurasi.1)<- c("SSE", "MSE", "MAPE")
+colnames(akurasi.1) <- c("Akurasi lamda=0.2")
+akurasi.1
+
+fitted2<-ramalan2$fitted
+sisaan2<-ramalan2$residuals
+head(sisaan2)
+
+resid2<-training$Harga-ramalan2$fitted
+head(resid2)
+
+SSE.2=sum(sisaan2[2:length(train.ts)]^2)
+SSE.2
+
+MSE.2 = SSE.2/length(train.ts)
+MSE.2
+
+MAPE.2 = sum(abs(sisaan2[2:length(train.ts)]/train.ts[2:length(train.ts)])*
+               100)/length(train.ts)
+MAPE.2
+
+akurasi.2 <- matrix(c(SSE.2,MSE.2,MAPE.2))
+row.names(akurasi.2)<- c("SSE", "MSE", "MAPE")
+colnames(akurasi.2) <- c("Akurasi lamda=0.7")
+akurasi.2
+```
+
+```{r}
+# Akurasi Data Uji
+
+selisih1<-ramalan1$mean-testing$Harga
+SSEtesting1<-sum(selisih1^2)
+MSEtesting1<-SSEtesting1/length(testing)
+
+selisih2<-ramalan2$mean-testing$Harga
+SSEtesting2<-sum(selisih2^2)
+MSEtesting2<-SSEtesting2/length(testing)
+
+selisihopt<-ramalanopt$mean-testing$Harga
+SSEtestingopt<-sum(selisihopt^2)
+MSEtestingopt<-SSEtestingopt/length(testing)
+
+akurasitesting1 <- matrix(c(SSEtesting1,SSEtesting2,SSEtestingopt))
+row.names(akurasitesting1)<- c("SSE1", "SSE2", "SSEopt")
+akurasitesting1
+
+akurasitesting2 <- matrix(c(MSEtesting1,MSEtesting2,MSEtestingopt))
+row.names(akurasitesting2)<- c("MSE1", "MSE2", "MSEopt")
+akurasitesting2
+```
+
+```{r}
+accuracy(ramalanopt,testing$Harga)
+```
+
+```{r}
+# Perbandingan SES dan DES
+
+MSEfull <-
+  matrix(c(MSEtesting1,MSEtesting2,MSEtestingopt,MSEtestingdes1,MSEtestingdes2,
+           MSEtestingdesopt),nrow=3,ncol=2)
+row.names(MSEfull)<- c("ske 1", "ske 2", "ske opt")
+colnames(MSEfull) <- c("ses","des")
+MSEfull
+```
+
+Metode DES memberikan hasil peramalan yang lebih akurat dibandingkan SES dikarenakan nilai MSE yang jauh lebih rendah. Hal ini menunjukkan bahwa data kopi memiliki pola tren sehingga DES lebih cocok digunakan.
