@@ -1,1 +1,217 @@
+## Latihan Praktikum 1
+
+```{r}
+library("forecast")
+library("graphics")
+library("TTR")
+library("TSA")
+```
+
+
+```{r}
+library(readxl)
+data_coffee <- read_excel("C:/Users/lenovo/OneDrive/ドキュメント/MPDW/Data/coffe_prices_kelompok.xlsx")
+View(data_coffee)
+
+# subset baris 301 - 400
+data_coffee_sub <- data_coffee[301:400, ]
+
+# mengambil kolom ke-2 (harga kopi)
+y_sub <- data_coffee_sub[[2]]   
+
+# mengambil tahun dan bulan dari baris pertama subset data
+start_year  <- as.numeric(format(data_coffee_sub$`Date (Monthly)`[1], "%Y"))
+start_month <- as.numeric(format(data_coffee_sub$`Date (Monthly)`[1], "%m"))
+
+# mengubah data agar terbaca sebagai data deret waktu
+data_coffee_sub.ts <- ts(y_sub,
+                         start = c(start_year, start_month),
+                         frequency = 12)
+
+# menampilkan ringkasan data
+summary(data_coffee_sub.ts)
+
+# membuat plot data deret waktu
+ts.plot(data_coffee_sub.ts, 
+        xlab = "Time Period", 
+        ylab = "Coffee Arabica ($/kg)", 
+        main = "Time Series Plot of Coffee Arabica")
+
+points(data_coffee_sub.ts)
+
+#library(rio)
+#data1 <- import("https://raw.githubusercontent.com/mrnabilnaufal07/Asisten-MPDW/refs/heads/main/Pertemuan%201/Data_1.csv")
+```
+
+### Pembagian Data Latih dan Uji
+```{r}
+# membagi data training dan testing dengan perbandingan 80% data latih dan 20% data uji.
+training <- data_coffee_sub[1:80, ]
+testing  <- data_coffee_sub[81:100, ]
+
+# mengambil kolom ke-2 pada data training (harga kopi)
+y_train <- training[[2]]
+
+# mengambil tahun dan bulan dari baris pertama data training
+start_year_train  <- as.numeric(format(training$`Date (Monthly)`[1], "%Y"))
+start_month_train <- as.numeric(format(training$`Date (Monthly)`[1], "%m"))
+
+# mengubah ke time series
+train.ts <- ts(y_train,
+               start = c(start_year_train, start_month_train),
+               frequency = 12)
+
+# mengambil kolom ke-2 pada data testing (harga kopi)
+y_test <- testing[[2]]
+
+# mengambil tahun dan bulan dari baris pertama testing
+start_year_test  <- as.numeric(format(testing$`Date (Monthly)`[1], "%Y"))
+start_month_test <- as.numeric(format(testing$`Date (Monthly)`[1], "%m"))
+
+# mengubah ke time series
+test.ts <- ts(y_test,
+              start = c(start_year_test, start_month_test),
+              frequency = 12)
+
+```
+
+### Eksplorasi
+```{r}
+plot(data_coffee_sub.ts, col="black",main="Plot semua data")
+points(data_coffee_sub.ts)
+
+plot(train.ts, col="red",main="Plot data latih")
+points(train.ts)
+
+plot(test.ts, col="blue",main="Plot data uji")
+points(test.ts)
+```
+
+#### Dengan ggplot2
+```{r}
+# mengganti nama kolom agar lebih mudah
+colnames(training)[2] <- "Harga"
+colnames(testing)[2]  <- "Harga"
+colnames(training)[1] <- "Periode"
+colnames(testing)[1]  <- "Periode"
+
+# Membuat plot
+library(ggplot2)
+ggplot() + 
+  geom_line(data = training, aes(x = Periode, y = Harga, col = "Data Latih")) +
+  geom_line(data = testing, aes(x = Periode, y = Harga, col = "Data Uji")) +
+  labs(x = "Periode Waktu", 
+       y = "Harga Kopi Arabica ($/kg)", 
+       color = "Legend") +
+  scale_colour_manual(name = "Keterangan:", 
+                      breaks = c("Data Latih", "Data Uji"),
+                      values = c("blue", "red")) + 
+  theme_bw() + 
+  theme(legend.position = "bottom",
+        plot.caption = element_text(hjust = 0.5, size = 12))
+
+```
+
+### Metode Pemulusan Double Exponential Smoothing (DES)
+Digunakan metode double exponential smoothing pada data ini dikarenakan data menunjukkan pola tren (tidak konstan). DES mampu menangkap komponen level dan tren sehingga lebih sesuai dibanding metode sederhana (SES) atau moving average.
+
+```{r}
+# Model DES dengan parameter optimum
+des.opt <- HoltWinters(train.ts, gamma = FALSE)
+des.opt
+plot(des.opt)
+
+#ramalan
+ramalandesopt<- forecast(des.opt, h=20)
+ramalandesopt
+
+#Model DES dengan Lamda=0.2 dan gamma=0.2
+des.1<- HoltWinters(train.ts, gamma = FALSE, beta = 0.2, alpha = 0.2)
+plot(des.1)
+
+#ramalan
+ramalandes1<- forecast(des.1, h=20)
+ramalandes1
+
+# Model DES dengan Lamda=0.6 dan gamma=0.3
+des.2<- HoltWinters(train.ts, gamma = FALSE, beta = 0.3, alpha = 0.6)
+plot(des.2)
+
+#ramalan
+ramalandes2<- forecast(des.2, h=20)
+ramalandes2
+```
+
+```{r}
+# membandingkan plot data latih dan data uji dengan Model DES 2 dikarenakan ramalan mengikuti pola data uji dengan cukup baik
+plot(data_coffee_sub.ts)
+lines(des.2$fitted[,1], lty=2, col="blue")
+lines(ramalandes2$mean, col="red")
+```
+
+#### Akurasi Data Latih
+```{r}
+ssedes.train1<-des.1$SSE
+msedes.train1<-ssedes.train1/length(train.ts)
+sisaandes1<-ramalandes1$residuals
+head(sisaandes1)
+
+mapedes.train1 <- sum(abs(sisaandes1[3:length(train.ts)]/train.ts[3:length(train.ts)])
+                      *100)/length(train.ts)
+
+akurasides.1 <- matrix(c(ssedes.train1,msedes.train1,mapedes.train1))
+row.names(akurasides.1)<- c("SSE", "MSE", "MAPE")
+colnames(akurasides.1) <- c("Akurasi lamda=0.2 dan gamma=0.2")
+akurasides.1
+
+ssedes.train2<-des.2$SSE
+msedes.train2<-ssedes.train2/length(train.ts)
+sisaandes2<-ramalandes2$residuals
+head(sisaandes2)
+
+mapedes.train2 <- sum(abs(sisaandes2[3:length(train.ts)]/train.ts[3:length(train.ts)])
+                      *100)/length(train.ts)
+
+akurasides.2 <- matrix(c(ssedes.train2,msedes.train2,mapedes.train2))
+row.names(akurasides.2)<- c("SSE", "MSE", "MAPE")
+colnames(akurasides.2) <- c("Akurasi lamda=0.6 dan gamma=0.3")
+akurasides.2
+```
+Hasil akurasi dari data latih didapatkan skenario 2 dengan lamda = 0.6 dan gamma = 0.3 memiliki hasil yang lebih baik dibandingkan dengan skenario 1 berdasarkan nilai MAPE-nya. Namun untuk kedua skenario dapat dikategorikan peramalan baik berdasarkan nilai MAPE-nya.
+
+#### Akurasi Data Uji
+```{r}
+selisihdes1<-ramalandes1$mean-testing$Harga
+selisihdes1
+
+SSEtestingdes1<-sum(selisihdes1^2)
+MSEtestingdes1<-SSEtestingdes1/length(testing$Harga)
+MAPEtestingdes1<-sum(abs(selisihdes1/testing$Harga)*100)/length(testing$Harga)
+
+selisihdes2<-ramalandes2$mean-testing$Harga
+selisihdes2
+
+SSEtestingdes2<-sum(selisihdes2^2)
+MSEtestingdes2<-SSEtestingdes2/length(testing$Harga)
+MAPEtestingdes2<-sum(abs(selisihdes2/testing$Harga)*100)/length(testing$Harga)
+
+selisihdesopt<-ramalandesopt$mean-testing$Harga
+selisihdesopt
+
+SSEtestingdesopt<-sum(selisihdesopt^2)
+MSEtestingdesopt<-SSEtestingdesopt/length(testing$Harga)
+MAPEtestingdesopt<-sum(abs(selisihdesopt/testing$Harga)*100)/length(testing$Harga)
+
+akurasitestingdes <-
+  matrix(c(SSEtestingdes1,MSEtestingdes1,MAPEtestingdes1,SSEtestingdes2,MSEtestingdes2,
+           MAPEtestingdes2,SSEtestingdesopt,MSEtestingdesopt,MAPEtestingdesopt),
+         nrow=3,ncol=3)
+row.names(akurasitestingdes)<- c("SSE", "MSE", "MAPE")
+colnames(akurasitestingdes) <- c("des ske1","des ske2","des opt")
+akurasitestingdes
+```
+Berdasarkan hasil akurasi data uji, hasil analisis menunjukkan bahwa model Double Exponential Smoothing (DES) skenario 2 dengan parameter α = 0.6 dan β = 0.3 dan skenario optimum memberikan performa terbaik dibandingkan skenario 1. Hal ini terlihat dari nilai MAPE pada data uji yang berada di bawah 20%, sehingga model dapat dikategorikan cukup akurat dalam memprediksi harga kopi. Dengan demikian, model ini layak dijadikan acuan untuk peramalan harga kopi ke depan, terutama karena data menunjukkan adanya pola tren yang sesuai dengan pendekatan DES.
+
+
+
 
