@@ -1,3 +1,15 @@
+---
+title: "Tugas Praktikum 1"
+author: "Dewi Muliani"
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 ## Latihan Praktikum 1
 
 ```{r}
@@ -211,7 +223,6 @@ colnames(akurasitestingdes) <- c("des ske1","des ske2","des opt")
 akurasitestingdes
 ```
 Berdasarkan hasil akurasi data uji, hasil analisis menunjukkan bahwa model Double Exponential Smoothing (DES) skenario 2 dengan parameter α = 0.6 dan β = 0.3 dan skenario optimum memberikan performa terbaik dibandingkan skenario 1. Hal ini terlihat dari nilai MAPE pada data uji yang berada di bawah 20%, sehingga model dapat dikategorikan cukup akurat dalam memprediksi harga kopi. Dengan demikian, model ini layak dijadikan acuan untuk peramalan harga kopi ke depan, terutama karena data menunjukkan adanya pola tren yang sesuai dengan pendekatan DES.
-
 
 
 
