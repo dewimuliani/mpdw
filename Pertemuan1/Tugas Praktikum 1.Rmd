@@ -19,7 +19,6 @@ library("TTR")
 library("TSA")
 ```
 
-
 ```{r}
 library(readxl)
 data_coffee <- read_excel("C:/Users/lenovo/OneDrive/ドキュメント/MPDW/Data/coffe_prices_kelompok.xlsx")
@@ -56,6 +55,7 @@ points(data_coffee_sub.ts)
 ```
 
 ### Pembagian Data Latih dan Uji
+
 ```{r}
 # membagi data training dan testing dengan perbandingan 80% data latih dan 20% data uji.
 training <- data_coffee_sub[1:80, ]
@@ -88,6 +88,7 @@ test.ts <- ts(y_test,
 ```
 
 ### Eksplorasi
+
 ```{r}
 plot(data_coffee_sub.ts, col="black",main="Plot semua data")
 points(data_coffee_sub.ts)
@@ -100,6 +101,7 @@ points(test.ts)
 ```
 
 #### Dengan ggplot2
+
 ```{r}
 # mengganti nama kolom agar lebih mudah
 colnames(training)[2] <- "Harga"
@@ -125,6 +127,7 @@ ggplot() +
 ```
 
 ### Metode Pemulusan Double Exponential Smoothing (DES)
+
 Digunakan metode double exponential smoothing pada data ini dikarenakan data kopi pada eksplorasi menunjukkan pola tren (tidak konstan). DES mampu menangkap komponen level dan tren sehingga lebih sesuai dibanding metode sederhana (SES) atau moving average.
 
 ```{r}
@@ -166,6 +169,7 @@ lines(ramalandesopt$mean, col="red")
 ```
 
 #### Akurasi Data Latih
+
 ```{r}
 ssedes.train1<-des.1$SSE
 msedes.train1<-ssedes.train1/length(train.ts)
@@ -193,9 +197,11 @@ row.names(akurasides.2)<- c("SSE", "MSE", "MAPE")
 colnames(akurasides.2) <- c("Akurasi lamda=0.6 dan gamma=0.3")
 akurasides.2
 ```
+
 Hasil akurasi dari data latih didapatkan skenario 2 dengan lamda = 0.6 dan gamma = 0.3 memiliki hasil yang lebih baik dibandingkan dengan skenario 1 berdasarkan nilai MAPE-nya. Namun untuk kedua skenario dapat dikategorikan peramalan baik berdasarkan nilai MAPE-nya (dibawah 20%).
 
 #### Akurasi Data Uji
+
 ```{r}
 selisihdes1<-ramalandes1$mean-testing$Harga
 selisihdes1
@@ -226,9 +232,11 @@ row.names(akurasitestingdes)<- c("SSE", "MSE", "MAPE")
 colnames(akurasitestingdes) <- c("des ske1","des ske2","des opt")
 akurasitestingdes
 ```
+
 Berdasarkan hasil akurasi data uji, hasil analisis menunjukkan bahwa model Double Exponential Smoothing (DES) skenario 2 dengan parameter α = 0.6 dan β = 0.3 dan skenario optimum memberikan performa terbaik dibandingkan skenario 1. Hal ini terlihat dari nilai MAPE pada data uji yang berada di bawah 20%, sehingga model dapat dikategorikan cukup akurat dalam memprediksi harga kopi. Dengan demikian, model ini layak dijadikan acuan untuk peramalan harga kopi ke depan, terutama karena data menunjukkan adanya pola tren yang sesuai dengan pendekatan DES.
 
 ### Membandingkan dengan Metode Pemulusan SES (Single Exponential Smoothing)
+
 ```{r}
 ses1<- HoltWinters(train.ts, gamma = FALSE, beta = FALSE, alpha = 0.2)
 plot(ses1)
