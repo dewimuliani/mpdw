@@ -21,7 +21,7 @@ library("TSA")
 
 ```{r}
 library(rio)
-data_coffee <- import("https://github.com/diazaria/mpdw/raw/main/Pertemuan%201/Data%20Kelompok%205_Harga%20Kopi.xlsx")
+data_coffee <- import("https://raw.githubusercontent.com/diazaria/mpdw/refs/heads/main/Pertemuan%201/Data%20Kelompok%205_Harga%20Kopi.xlsx")
 View(data_coffee)
 
 library(dplyr)
