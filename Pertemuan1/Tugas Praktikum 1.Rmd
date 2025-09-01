@@ -24,6 +24,7 @@ library(rio)
 data_coffee <- import("https://raw.githubusercontent.com/diazaria/mpdw/refs/heads/main/Pertemuan%201/Data%20Kelompok%205_Harga%20Kopi.xlsx")
 View(data_coffee)
 
+
 library(dplyr)
 data_coffee <- select(data_coffee, -1)
 
