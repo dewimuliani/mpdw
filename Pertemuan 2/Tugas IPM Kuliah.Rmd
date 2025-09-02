@@ -50,7 +50,6 @@ Nilai Adjusted R-squared sangat tinggi (0.9856) dan koefisien tahun signifikan (
 # Plot sisaan vs waktu
 sisaan_awal <- residuals(model_awal)
 
-# Plot sisaan terhadap waktu
 plot(dt_ipm_bengkulu$Tahun, sisaan_awal, type="o", pch=20, col="red",
      main="Plot Sisaan vs Waktu", xlab="Tahun", ylab="Sisaan")
 abline(h=0, lty=2) # Garis referensi di y=0
