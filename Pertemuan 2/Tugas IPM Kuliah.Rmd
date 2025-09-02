@@ -20,6 +20,16 @@ library(HoRM)
 ```{r}
 dt_ipm_bengkulu <- read.csv("C:/Users/lenovo/OneDrive/ドキュメント/Metode Peramalan Deret Waktu (MPDW)/data ipm/mpdw5 - Sheet1.csv")
 dt_ipm_bengkulu
+
+# Plot garis time series
+plot(dt_ipm_bengkulu, 
+     main = "Time Series IPM Bengkulu", 
+     ylab = "IPM", 
+     xlab = "Tahun", 
+     type = "l", col = "red", lwd = 1)
+
+# Tambahkan titik merah
+points(dt_ipm_bengkulu, col = "red", pch = 19)
 ```
 
 ## Model Awal
@@ -47,6 +57,11 @@ abline(h=0, lty=2) # Garis referensi di y=0
 ```
 
 Plot di atas menunjukkan pola yang tidak acak. Hal ini adalah gejala visual yang kuat dari autokorelasi positif. Sisaan positif cenderung diikuti sisaan positif, dan sebaliknya.
+
+```{r}
+#Plot ACF
+acf(model_awal$residuals, main="ACF Residuals Regresi IPM Bengkulu")
+```
 
 ### Diagnosis Formal (Uji Durbin Watson)
 
