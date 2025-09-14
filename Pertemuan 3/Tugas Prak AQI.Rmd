@@ -258,3 +258,5 @@ legend("topleft",c("aktual", "koyck","DLM", "autoregressive"), lty=1, col=c("bla
 
 Berdasarkan plot tersebut, terlihat bahwa plot yang paling mendekati data aktualnya adalah Model Distributed Lag dan Autoregressive, namun berdasarkan nilai MAPE, DLM memiliki nilai MAPE yang lebih kecil. Sehingga dapat disimpulkan model terbaik dalam hal ini adalah model distributed lag.
 
+Maka dari itu, pengaruh O₃ tidak hanya pada waktu sekarang, tetapi juga pada beberapa periode sebelumnya (lag effect). Artinya, perubahan kadar ozon hari ini maupun beberapa waktu sebelumnya ikut menentukan nilai AQI pada periode berikutnya. Dengan kata lain, terdapat hubungan dinamis dan berjangka waktu antara O₃ dan AQI, di mana peningkatan O₃ dalam satu waktu dapat berdampak pada memburuknya kualitas udara (AQI lebih tinggi) tidak hanya saat itu, tetapi juga pada periode berikutnya.
+
