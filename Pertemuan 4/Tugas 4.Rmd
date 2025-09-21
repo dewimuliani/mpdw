@@ -14,6 +14,7 @@ ts.plot(wn)
 ```
 
 # MA(2)
+
 ## Pembangkitan Proses MA(2)
 
 ```{r}
@@ -44,6 +45,7 @@ ma2
 ```
 
 ### Dengan arima.sim
+
 ```{r}
 set.seed(1234)
 ma2_sim <- arima.sim(list(order=c(0,0,2), ma=c(0.4,0.6)), n=300)
@@ -137,6 +139,7 @@ Berdasarkan scatterplot tersebut, terlihat bahwa terdapat hubungan positif antar
 ```{r}
 cor(yt_ma2,yt_2_ma2)
 ```
+
 Korelasi antara $Y_t$ dengan $Y_{t-2}$ dari hasil simulasi mendekati perhitungan teoritis yaitu
 
 $$
@@ -144,6 +147,7 @@ $$
 $$
 
 #### Korelasi antara $Y_t$ dengan $Y_{t-3}$
+
 ```{r}
 #Yt
 yt_ma2 <- ma2[-c(1,2,3)]
@@ -164,7 +168,9 @@ cor(yt_ma2,yt_3_ma2)
 Korelasi antara $Y_t$ dengan $Y_{t-3}$ hasil simulasi mendekati teori yang ada yaitu 0.
 
 # AR(2)
+
 ## Pembangkitan Proses AR(2)
+
 ```{r}
 set.seed(1234)
 wn <- rnorm(300)
@@ -174,13 +180,14 @@ $$ Y_t = e_t+0.5Y_{t-1}+0.2Y_{t-2} $$
 
 ```{r}
 n <- length(wn) 
-
 # Menginisialisasi nilai awal
+ar <- rep(0, n)
 ar[1] <- wn[1]
 ar[2] <- wn[2] + 0.5*ar[1]
 ```
 
 ### Manual
+
 ```{r}
 ar <- c(1:n) 
 for (i in 3:n) {ar[i]<-wn[i]+0.5*ar[i-1]+0.2*ar[i-2]}
@@ -192,10 +199,12 @@ ar
 ar2 <- arima.sim(list(order=c(2,0,0), ar = c(0.5, 0.2)), n=300)
 ar2
 ```
+
 Hasil pembangkitan AR(2) secara manual dan dengan fungsi arima.sim() juga berbeda karena keduanya menggunakan white noise acak yang tidak sama, serta perbedaan perlakuan nilai awal. Pada metode manual, nilai awal ditentukan secara eksplisit lalu dilanjutkan dengan rumus rekursif, sedangkan arima.sim() menetapkan kondisi awal berdasarkan sifat stasioner proses AR. Akibatnya, meskipun parameter model sama, keluaran yang dihasilkan tidak identik.
 
 ## Karakteristik AR(2)
-### Plot 
+
+### Plot
 #### Plot Time Series
 ```{r}
 ts.plot(ar)
@@ -218,6 +227,7 @@ pacf(ar)
 Berdasarkan plot PACF tersebut, terlihat bahwa plot PACF *cuts off* pada lag kedua, sejalan dengan teori yang ada.
 
 #### Plot EACF
+
 ```{r}
 TSA::eacf(ar)
 ```
@@ -227,7 +237,9 @@ Berdasarkan pola segitiga nol pada plot EACF, terlihat bahwa segitiga nol berada
 Pada data yang sebenarnya dibangkitkan dari AR(2), EACF bisa saja menampilkan pola seolah cocok dengan ARMA(1,1) karena sifat metode ini yang tidak selalu konsisten. Hal ini umumnya disebabkan oleh beberapa faktor: ukuran sampel yang terbatas sehingga pola korelasi tidak tampak jelas, adanya fluktuasi acak dari white noise yang membuat estimasi korelasi menyimpang, serta kecenderungan EACF “mengganti” orde AR dengan tambahan komponen MA kecil. Akibatnya, meskipun model sebenarnya AR(2), hasil EACF dapat memberi ilusi bahwa model yang sesuai adalah ARMA(1,1).
 
 ### Scatterplot Antar Lag
+
 #### Korelasi antara $Y_t$ dengan $Y_{t-1}$
+
 ```{r}
 #Yt
 yt_ar <- ar[-1]
@@ -246,6 +258,7 @@ Berdasarkan scatterplot tersebut, terlihat bahwa terdapat hubungan positif antar
 ```{r}
 cor(yt_ar,yt_1_ar)
 ```
+
 Korelasi antara $Y_t$ dengan $Y_{t-1}$ dari hasil simulasi mendekati perhitungan teoritis yaitu $\rho_1=\frac{\phi_1}{1-\phi_2}=\frac{0.5}{1-0.2}=0.625$
 
 #### Korelasi antara $Y_t$ dengan $Y_{t-2}$
@@ -272,6 +285,7 @@ cor(yt_ar2,yt_2_ar)
 Korelasi antara $Y_t$ dengan $Y_{t-2}$ dari hasil simulasi mendekati perhitungan teoritis yaitu $\rho_2={\phi_1}{\rho_1}+{\phi_2}{\rho_0}={0.5}(0.625)+0.2(1)=0.5125$
 
 #### Korelasi antara $Y_t$ dengan $Y_{t-3}$
+
 ```{r}
 #Yt
 yt_ar2 <- ar[-c(1,2,3)]
@@ -294,7 +308,9 @@ cor(yt_ar2,yt_3_ar)
 Korelasi antara $Y_t$ dengan $Y_{t-3}$ dari hasil simulasi mendekati perhitungan teoritis yaitu $\rho_3={\phi_1}{\rho_2}+{\phi_2}{\rho_1}={0.5}(0.5125)+0.2(0.625)=0.38125$
 
 # ARMA(2,2)
+
 ## Pembangkitan Proses ARMA(2,2
+
 ```{r}
 set.seed(1234)
 n <- 300
@@ -313,6 +329,7 @@ y.arma <- rep(0, n)
 ```
 
 ### Manual
+
 ```{r}
 # Loop mulai dari t = 3
 for (i in 3:n) {
@@ -328,14 +345,19 @@ y.arma
 ```
 
 ### Dengan arima.sim
+
 ```{r}
 set.seed(1234)
 arma22 <- arima.sim(list(order=c(2,0,2), ar = c(0.5,0.2), ma = c(0.4,0.6)), n=300)
 arma22
 ```
+
 ## Karakteristik ARMA(2,2)
+
 ### Plot
+
 #### Plot Time series
+
 ```{r}
 ts.plot(y.arma)
 ```
@@ -343,6 +365,7 @@ ts.plot(y.arma)
 Berdasarkan plot time series tersebut, terlihat bahwa model ARMA(2,2) cenderung stasioner dalam rataan
 
 #### Plot ACF
+
 ```{r}
 acf(y.arma)
 ```
@@ -350,6 +373,7 @@ acf(y.arma)
 Berdasarkan plot ACF tersebut, terlihat bahwa model ARMA(2,2) hasil simulasi memiliki plot ACF yang *tails off*, sesuai dengan teori yang ada.
 
 #### Plot PACF
+
 ```{r}
 pacf(y.arma)
 ```
@@ -357,15 +381,19 @@ pacf(y.arma)
 Berdasarkan plot PACF tersebut, terlihat bahwa model ARMA(2,2) hasil simulasi memiliki plot PACF yang *tails off*, sesuai dengan teori
 
 #### Plot EACF
+
 ```{r}
 TSA::eacf(y.arma)
 ```
+
 Berdasarkan pola segitiga nol pada plot EACF, terlihat bahwa segitiga nol berada pada ordo AR(1) dan ordo MA(2).
 
 Perbedaan antara model sebenarnya ARMA(2,2) dan hasil identifikasi EACF yang terlihat seperti ARMA(1,2) bisa terjadi karena keterbatasan metode dan sifat data simulasi. EACF bekerja dengan mendeteksi pola nol pada fungsi autokorelasi, namun pada sampel terbatas pola ini sering tidak muncul dengan jelas akibat variasi acak dari white noise. Selain itu, kombinasi nilai parameter tertentu bisa membuat struktur korelasi ARMA(2,2) menyerupai ARMA(1,2), sehingga metode cenderung “menyederhanakan” orde AR. Inilah sebabnya hasil EACF dapat berbeda dari model pembangkit aslinya.
 
 ### Scatterplot Antar Lag
+
 #### Korelasi antara $Y_t$ dengan $Y_{t-1}$
+
 ```{r}
 #Yt
 yt_arma <- arma22[-1]
@@ -384,8 +412,8 @@ Berdasarkan scatterplot tersebut, terlihat bahwa terdapat hubungan positif antar
 ```{r}
 cor(yt_arma,yt_1_arma)
 ```
-Korelasi antara $Y_t$ dengan $Y_{t-1}$ dari hasil simulasi mendekati perhitungan teoritis.
-$$
+
+Korelasi antara $Y_t$ dengan $Y_{t-1}$ dari hasil simulasi mendekati perhitungan teoritis. $$
 \gamma_0 = \frac{\sigma^2 \bigl(1 + \theta_1^2 + \theta_2^2 + 2\theta_1 + 2\theta_1 \theta_2\bigr)}
 {1 - \phi_1^2 - \phi_2^2 - 2\phi_1 \phi_2}=\frac{1 \bigl(1 + 0.4^2 + 0.6^2 + 2(0.4) + 2(0.4)(0.6)\bigr)}
 {1 - 0.5^2 - 0.2^2 - 2(0.5)(0.2)}
@@ -402,8 +430,8 @@ $$
 \rho_1 = 
 \frac{\gamma_1}{\gamma_0}
 = 0.8918
-$$
-#### Korelasi antara $Y_t$ dengan $Y_{t-2}$
+$$ \#### Korelasi antara $Y_t$ dengan $Y_{t-2}$
+
 ```{r}
 yt_arma <- arma22[-c(1,2)]
 yt_2_arma <- arma22[-c(299,300)]
@@ -437,6 +465,7 @@ $$
 $$
 
 #### Korelasi antara $Y_t$ dengan $Y_{t-3}$
+
 ```{r}
 yt_arma <- arma22[-c(1,2,3)]
 yt_3_arma <- arma22[-c(298,299,300)]
@@ -451,14 +480,13 @@ Berdasarkan scatterplot tersebut, terlihat bahwa terdapat hubungan positif antar
 ```{r}
 cor(yt_arma,yt_3_arma)
 ```
+
 Korelasi antara $Y_t$ dengan $Y_{t−2}$ dari hasil simulasi mendekati perhitungan teoritis.
 
 $$
 \gamma_3 = \phi_1 \gamma_2 + \phi_2 \gamma_1= 0.5(3.1949) + 0.2(3.3064)
 = 1.59745 + 0.66128
 = 2.2587
-$$
-$$
+$$ $$
 \rho_3 = \frac{\gamma_3}{\gamma_0}=\frac{2.2587}{3.7083} = 0.6094
 $$
-
