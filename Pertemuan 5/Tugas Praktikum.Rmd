@@ -1,1 +1,374 @@
+---
+title: "Tugas 5"
+author: "Dewi Muliani"
+date: "2025-09-28"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(tsibble)
+library(tseries)
+library(MASS)
+```
+
+# Input data kopi
+```{r}
+library(rio)
+data_coffee <- import("https://raw.githubusercontent.com/diazaria/mpdw/refs/heads/main/Pertemuan%201/Data%20Kelompok%205_Harga%20Kopi.xlsx")
+
+library(dplyr)
+data_coffee <- select(data_coffee, -1)
+
+# subset baris 301 - 400
+data_coffee_sub <- data_coffee[301:400, ]
+
+# mengambil kolom ke-2 (harga kopi)
+y_sub <- data_coffee_sub[[2]]   
+
+# mengambil tahun dan bulan dari baris pertama subset data
+start_year  <- as.numeric(format(data_coffee_sub$`Date (Monthly)`[1], "%Y"))
+start_month <- as.numeric(format(data_coffee_sub$`Date (Monthly)`[1], "%m"))
+
+# mengubah data agar terbaca sebagai data deret waktu
+data_coffee_sub.ts <- ts(y_sub,
+                         start = c(start_year, start_month),
+                         frequency = 12)
+```
+
+# Plot Time Series
+```{r}
+plot_coffee <- data_coffee_sub.ts |> 
+  as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() +
+  theme_bw() +
+  xlab("Time Period") +
+  ylab("Coffee Arabica ($/kg)") +
+  ggtitle("Time Series Plot of Coffee Arabica")
+
+# Tampilkan plot
+plot_coffee
+
+# Hitung rata-rata
+mean(data_coffee_sub.ts)
+```
+
+```{r}
+lattice::densityplot(as.vector(data_coffee_sub.ts))
+```
+
+Berdasarkan plot time series tersebut, terlihat bahwa data tidak stasioner dalam rataan, ditandai dengan adanya trend pada data dan tidak stasioner dalam ragam yang ditandai dengan adanya perbedaan lebar pita pada plot
+
+# Plot ACF
+```{r}
+acf(data_coffee_sub.ts)
+```
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut menurun secara perlahan (*tails off slowly*) sehingga mengindikasikan adanya kecenderungan tren atau unit root pada data. Pola ini menunjukkan indikasi bahwa data tidak stasioner dalam rataan.
+
+# Uji ADF
+```{r}
+adf.test(data_coffee_sub.ts)
+```
+Namun, pada uji ADF terlihat bahwa p-value sebesar 0.024 (< 0.05) sehingga hipotesis nol ditolak dan data dinyatakan stasioner. Dengan demikian, meskipun secara visual tampak adanya tren, namun secara statistik data tersebut sudah memenuhi asumsi stasioner dalam rataan.
+
+# Plot Box-Cox
+```{r}
+index <- seq(1:100)
+bc <- boxcox(data_coffee_sub.ts~index, lambda = seq(-2, 2, 0.01))
+#Nilai Rounded Lambda
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#SK
+bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+```
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **-0.37** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-0.74** dan batas atas **0.00**. Selang tersebut tidak memuat nilai satu sehingga dapat dikatakan bahwa data kopi tidak stasioner dalam ragam.
+
+# Partisi Data
+## Bagian 1
+```{r}
+dtgab1 <- data_coffee_sub.ts[1:58] |> ts()
+# Hitung rata-rata
+mean(dtgab1)
+# Hitung ragam
+var(dtgab1)
+```
+
+### Plot Time Series
+```{r}
+dtgab1 |> as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() + theme_bw() +
+  xlab("Time Periode") + ylab("Coffee Arabica ($/kg)")
+```
+
+Berdasarkan plot time series tersebut, terlihat bahwa data cenderung tidak stasioner dalam rataan, ditandain dengan adanya trend pada data, serta tidak stasioner dalam ragam, ditandai dengan lebar pita yang cenderung tidak sama pada plot tersebut
+
+### Plot ACF
+```{r}
+acf(dtgab1)
+```
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut menurun secara perlahan (*tails off slowly*) yang menandakan data tidak stasioner dalam rataan.
+
+### Uji ADF
+```{r}
+adf.test(dtgab1)
+```
+Hasil analisis menunjukkan bahwa pada data gabungan 1, uji ADF Tidak tolak hipotesis nol sehingga data dinyatakan data gabungan 1 tidak stasioner dalam rataan, namun pada data keseluruhan uji ADF menghasilkan p-value yang signifikan sehingga data dinyatakan stasioner dalam rataan. Perbedaan ini terjadi karena subset hanya merepresentasikan periode awal dengan tren yang masih dominan, sedangkan pada keseluruhan periode fluktuasi data lebih seimbang sehingga secara statistik memenuhi asumsi stasioner dalam rataan.
+
+### Plot Box-Cox
+```{r}
+index <- seq(1:58)
+bc <- boxcox(dtgab1~index, lambda = seq(-2, 2, 0.01))
+#Nilai Rounded Lambda
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#SK
+bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+```
+
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0.04** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-0.64** dan batas atas **0.75**. Selang tersebut tidak memuat nilai satu sehingga dapat dikatakan bahwa data kopi tidak stasioner dalam ragam.
+
+## Bagian 2
+```{r}
+dtgab2 <- data_coffee_sub.ts[59:100] |> ts()
+# Hitung rata-rata
+mean(dtgab2)
+# Hitung ragam
+var(dtgab2)
+```
+
+### Plot Time Series
+```{r}
+dtgab2 |> as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() + theme_bw() +
+  xlab("Time Periode") + ylab("Coffee Arabica ($/kg)")
+```
+
+Berdasarkan plot time series tersebut, terlihat bahwa data cenderung tidak stasioner dalam rataan, ditandain dengan adanya trend pada data, serta  cenderung stasioner dalam ragam, ditandai dengan lebar pita yang cenderung sama pada plot tersebut
+
+### Plot ACF
+```{r}
+acf(dtgab2)
+```
+
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut menurun secara perlahan (*tails off slowly*) yang menandakan data tidak stasioner dalam rataan.
+
+### Uji ADF
+```{r}
+adf.test(dtgab2)
+```
+Hasil analisis pada data gabungan 2 juga menunjukkan uji ADF Tidak tolak hipotesis nol sehingga data dinyatakan data gabungan 2 juga tidak stasioner dalam rataan. Perbedaan dengan data keseluruhan ini dapat terjadi karena subset hanya merepresentasikan periode akhir dengan tren yang masih dominan, sedangkan pada keseluruhan periode fluktuasi data lebih seimbang sehingga secara statistik memenuhi asumsi stasioner dalam rataan.
+
+### Plot Box-Cox
+```{r}
+index <- seq(59:100)
+bc <- boxcox(dtgab2~index, lambda = seq(-2, 2, 0.01))
+#Nilai Rounded Lambda
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#SK
+bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+```
+
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **1.74** dan pada selang kepercayaan 95% nilai memiliki batas bawah **0.00** dan batas atas **2.00**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data kopi stasioner dalam ragam.
+
+# Penanganan Kestasioneran
+## Differencing Orde 1
+```{r}
+diff1 <- diff(data_coffee_sub.ts, differences = 1)
+plot(diff1, main = "Diferensiasi Orde 1", ylab = "Differenced Value", xlab = "Time")
+```
+
+### Uji ADF
+```{r}
+adf.test(diff1)
+```
+Pada uji ADF terlihat bahwa p-value sebesar 0.01 < 0.05 sehingga hipotesis nol ditolak dan data diff1 dinyatakan stasioner.
+
+### Plot Box-Cox
+```{r}
+index <- seq_along(diff1)
+bc <- boxcox(diff1+2~index, lambda = seq(-2, 2, 0.01))
+#Nilai Rounded Lambda
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#SK
+bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+```
+
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0.76** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-0.05** dan batas atas **1.58**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data kopi stasioner dalam ragam.
+
+### Partisi Data
+#### Bagian 1
+```{r}
+dtgab1_diff <- diff1[1:58] |> ts()
+# Hitung rata-rata
+mean(dtgab1_diff)
+# Hitung ragam
+var(dtgab1_diff)
+```
+##### Plot Time Series
+```{r}
+dtgab1_diff|> as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() + theme_bw() +
+  xlab("Time Periode") + ylab("Coffee Arabica ($/kg)")
+```
+
+Berdasarkan plot time series tersebut, terlihat bahwa data cenderung stasioner dalam rataan serta stasioner dalam ragam, ditandai dengan lebar pita yang cenderung sama pada plot tersebut
+
+##### Plot ACF
+```{r}
+acf(dtgab1_diff)
+```
+
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut cenderung *tails off* dan membentuk gelombang sinus.
+
+##### Uji ADF
+```{r}
+adf.test(dtgab1_diff)
+```
+Hasil analisis pada data gabungan 1 setelah diferensiasi menunjukkan uji ADF Tidak tolak hipotesis nol sehingga data dinyatakan data gabungan 1 setelah diferensiasi tidak stasioner dalam rataan. 
+
+### Plot Box-Cox
+```{r}
+index <- seq_along(dtgab1_diff)
+bc <- boxcox(dtgab1_diff+2~index, lambda = seq(-2, 2, 0.01))
+#Nilai Rounded Lambda
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#SK
+bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+```
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0.64** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-0.38** dan batas atas **1.67**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data kopi stasioner dalam ragam.
+
+Karena hasil analisis pada data diff1 masih menunjukkan adanya data gabungan 1 yang tidak stasioner dalam rataan, maka dilakukan proses differensiasi lanjutan dengan orde kedua (diff2). Differensiasi orde kedua ini bertujuan untuk menghilangkan pola trend yang tersisa setelah differensiasi pertama, sehingga data dapat lebih memenuhi asumsi kestasioneran dalam rataan yang diperlukan untuk pemodelan deret waktu.
+
+## Transformasi Box-Cox
+```{r}
+# Tentukan lambda dari hasil Box-Cox
+lambda <- -0.37
+
+# Pastikan semua data positif
+min_val <- min(data_coffee_sub.ts)
+if(min_val <= 0){
+  data_trans <- data_coffee_sub.ts + abs(min_val) + 0.1
+} else {
+  data_trans <- data_coffee_sub.ts
+}
+
+# Transformasi Box-Cox manual
+boxcox_trans <- (data_trans^lambda - 1) / lambda
+
+# Plot hasil transformasi
+ts.plot(boxcox_trans, main = "Box-Cox Transformation (λ = -0.37)",
+        ylab = "Transformed Coffee Arabica", xlab = "Time")
+```
+
+### Uji ADF
+```{r}
+adf.test(boxcox_trans)
+```
+```{r}
+dtgab1_diff <- boxcox_trans[1:58] |> ts()
+# Hitung rata-rata
+mean(dtgab1_diff)
+# Hitung ragam
+var(dtgab1_diff)
+```
+
+```{r}
+library(MASS)
+
+# Pilih lambda hasil Box-Cox
+lambda <- -0.37  
+
+# Pastikan semua data positif
+min_val <- min(data_coffee_sub.ts)
+if(min_val <= 0){
+  data_bc <- data_coffee_sub.ts + abs(min_val) + 0.1
+} else {
+  data_bc <- data_coffee_sub.ts
+}
+
+# Transformasi Box-Cox
+data_bc <- (data_bc^lambda - 1) / lambda
+
+# Differensiasi orde 1
+diff_bc <- diff(data_bc, differences = 1)
+
+
+plot(diff_bc, main = "Diferensiasi box cox", ylab = "Differenced Value", xlab = "Time")
+
+# Plot ACF/PACF
+par(mfrow=c(1,2))
+acf(diff_bc, main="ACF: Box-Cox → Diff")
+pacf(diff_bc, main="PACF: Box-Cox → Diff")
+
+
+# Uji ADF
+adf.test(diff_bc)
+
+# Uji Box-Cox untuk model diff_bc
+index <- seq_along(diff_bc)
+bc <- boxcox(diff_bc+1~index, lambda = seq(-5, 5, 0.01))
+#Nilai Rounded Lambda
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#SK
+bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+
+```
+
+```{r}
+library(tseries)
+library(MASS)
+length(diff_bc)
+# -----------------------------
+# Bagi data
+gab1 <- diff_bc[1:58] |> ts()
+gab2 <- diff_bc[59:99] |> ts()
+
+# -----------------------------
+# Uji ADF dan Box-Cox untuk Gab1
+cat("\n### Hasil untuk Gab1 ###\n")
+
+# Uji ADF
+adf.test(gab1)
+
+# Uji Box-Cox
+index1 <- seq_along(gab1)
+bc1 <- boxcox(gab1 + 1 ~ index1, lambda = seq(-5, 5, 0.01))
+
+# Nilai lambda optimum (dibulatkan)
+lambda1 <- bc1$x[which.max(bc1$y)]
+cat("Lambda optimum Gab1:", lambda1, "\n")
+
+# Selang kepercayaan 95%
+CI1 <- bc1$x[bc1$y > max(bc1$y) - 1/2 * qchisq(.95, 1)]
+cat("CI 95% Gab1:", range(CI1), "\n")
+
+# -----------------------------
+# Uji ADF dan Box-Cox untuk Gab2
+cat("\n### Hasil untuk Gab2 ###\n")
+
+# Uji ADF
+adf.test(gab2)
+
+# Uji Box-Cox
+index2 <- seq_along(gab2)
+bc2 <- boxcox(gab2 + 1 ~ index2, lambda = seq(-5, 5, 0.01))
+
+# Nilai lambda optimum (dibulatkan)
+lambda2 <- bc2$x[which.max(bc2$y)]
+cat("Lambda optimum Gab2:", lambda2, "\n")
+
+# Selang kepercayaan 95%
+CI2 <- bc2$x[bc2$y > max(bc2$y) - 1/2 * qchisq(.95, 1)]
+cat("CI 95% Gab2:", range(CI2), "\n")
+
+```
+
 
