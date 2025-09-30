@@ -87,7 +87,7 @@ Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **-
 # Partisi Data
 ## Bagian 1
 ```{r}
-dtgab1 <- data_coffee_sub.ts[1:58] |> ts()
+dtgab1 <- data_coffee_sub.ts[1:80] |> ts()
 # Hitung rata-rata
 mean(dtgab1)
 # Hitung ragam
@@ -118,7 +118,7 @@ Hasil analisis menunjukkan bahwa pada data gabungan 1, uji ADF Tidak tolak hipot
 
 ### Plot Box-Cox
 ```{r}
-index <- seq(1:58)
+index <- seq(1:80)
 bc <- boxcox(dtgab1~index, lambda = seq(-2, 2, 0.01))
 #Nilai Rounded Lambda
 lambda <- bc$x[which.max(bc$y)]
@@ -127,11 +127,11 @@ lambda
 bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
 ```
 
-Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0.04** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-0.64** dan batas atas **0.75**. Selang tersebut tidak memuat nilai satu sehingga dapat dikatakan bahwa data kopi tidak stasioner dalam ragam.
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **-0.45** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-1.02** dan batas atas **0.11**. Selang tersebut tidak memuat nilai satu sehingga dapat dikatakan bahwa data kopi tidak stasioner dalam ragam.
 
 ## Bagian 2
 ```{r}
-dtgab2 <- data_coffee_sub.ts[59:100] |> ts()
+dtgab2 <- data_coffee_sub.ts[81:100] |> ts()
 # Hitung rata-rata
 mean(dtgab2)
 # Hitung ragam
@@ -163,7 +163,7 @@ Hasil analisis pada data gabungan 2 juga menunjukkan uji ADF Tidak tolak hipotes
 
 ### Plot Box-Cox
 ```{r}
-index <- seq(59:100)
+index <- seq(81:100)
 bc <- boxcox(dtgab2~index, lambda = seq(-2, 2, 0.01))
 #Nilai Rounded Lambda
 lambda <- bc$x[which.max(bc$y)]
@@ -172,203 +172,64 @@ lambda
 bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
 ```
 
-Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **1.74** dan pada selang kepercayaan 95% nilai memiliki batas bawah **0.00** dan batas atas **2.00**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data kopi stasioner dalam ragam.
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0.81** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-2.00** dan batas atas **2.00**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data kopi stasioner dalam ragam.
 
 # Penanganan Kestasioneran
-## Differencing Orde 1
-```{r}
-diff1 <- diff(data_coffee_sub.ts, differences = 1)
-plot(diff1, main = "Diferensiasi Orde 1", ylab = "Differenced Value", xlab = "Time")
-```
-
-### Uji ADF
-```{r}
-adf.test(diff1)
-```
-Pada uji ADF terlihat bahwa p-value sebesar 0.01 < 0.05 sehingga hipotesis nol ditolak dan data diff1 dinyatakan stasioner.
-
-### Plot Box-Cox
-```{r}
-index <- seq_along(diff1)
-bc <- boxcox(diff1+2~index, lambda = seq(-2, 2, 0.01))
-#Nilai Rounded Lambda
-lambda <- bc$x[which.max(bc$y)]
-lambda
-#SK
-bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
-```
-
-Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0.76** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-0.05** dan batas atas **1.58**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data kopi stasioner dalam ragam.
-
-### Partisi Data
-#### Bagian 1
-```{r}
-dtgab1_diff <- diff1[1:58] |> ts()
-# Hitung rata-rata
-mean(dtgab1_diff)
-# Hitung ragam
-var(dtgab1_diff)
-```
-##### Plot Time Series
-```{r}
-dtgab1_diff|> as_tsibble() |> 
-  ggplot(aes(x = index, y = value)) +
-  geom_line() + theme_bw() +
-  xlab("Time Periode") + ylab("Coffee Arabica ($/kg)")
-```
-
-Berdasarkan plot time series tersebut, terlihat bahwa data cenderung stasioner dalam rataan serta stasioner dalam ragam, ditandai dengan lebar pita yang cenderung sama pada plot tersebut
-
-##### Plot ACF
-```{r}
-acf(dtgab1_diff)
-```
-
-Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut cenderung *tails off* dan membentuk gelombang sinus.
-
-##### Uji ADF
-```{r}
-adf.test(dtgab1_diff)
-```
-Hasil analisis pada data gabungan 1 setelah diferensiasi menunjukkan uji ADF Tidak tolak hipotesis nol sehingga data dinyatakan data gabungan 1 setelah diferensiasi tidak stasioner dalam rataan. 
-
-### Plot Box-Cox
-```{r}
-index <- seq_along(dtgab1_diff)
-bc <- boxcox(dtgab1_diff+2~index, lambda = seq(-2, 2, 0.01))
-#Nilai Rounded Lambda
-lambda <- bc$x[which.max(bc$y)]
-lambda
-#SK
-bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
-```
-Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0.64** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-0.38** dan batas atas **1.67**. Selang tersebut memuat nilai satu sehingga dapat dikatakan bahwa data kopi stasioner dalam ragam.
-
-Karena hasil analisis pada data diff1 masih menunjukkan adanya data gabungan 1 yang tidak stasioner dalam rataan, maka dilakukan proses differensiasi lanjutan dengan orde kedua (diff2). Differensiasi orde kedua ini bertujuan untuk menghilangkan pola trend yang tersisa setelah differensiasi pertama, sehingga data dapat lebih memenuhi asumsi kestasioneran dalam rataan yang diperlukan untuk pemodelan deret waktu.
-
 ## Transformasi Box-Cox
 ```{r}
-# Tentukan lambda dari hasil Box-Cox
-lambda <- -0.37
+library(forecast)
 
-# Pastikan semua data positif
-min_val <- min(data_coffee_sub.ts)
-if(min_val <= 0){
-  data_trans <- data_coffee_sub.ts + abs(min_val) + 0.1
-} else {
-  data_trans <- data_coffee_sub.ts
-}
+lambda_opt <- -0.37
+data_coffee_sub_bc <- BoxCox(data_coffee_sub.ts, lambda = lambda_opt)
 
-# Transformasi Box-Cox manual
-boxcox_trans <- (data_trans^lambda - 1) / lambda
+plot(data_coffee_sub_bc, main = paste("Box-Cox Transform (λ =", round(lambda_opt, 2), ")"),
+     ylab = "Transformed Harga", col = "blue")
 
-# Plot hasil transformasi
-ts.plot(boxcox_trans, main = "Box-Cox Transformation (λ = -0.37)",
-        ylab = "Transformed Coffee Arabica", xlab = "Time")
+# Plot Box-Cox setelah transformasi
+index <- seq_along(data_coffee_sub_bc)
+b = boxcox(data_coffee_sub_bc~index, lambda = seq(-1,4,by=1))
 ```
+Gambar di atas menunjukkan selang memuat nilai satu sehingga dapat dikatakan bahwa data setelah transformasi stasioner dalam ragam.
 
-### Uji ADF
+## Diferensiasi setelah transformasi
 ```{r}
-adf.test(boxcox_trans)
+data_coffee_sub_bc_diff1 = diff(data_coffee_sub_bc, differences = 1)
+
+plot(data_coffee_sub_bc_diff1, main = "First Differencing after Box-Cox", 
+     ylab = "Δ Harga", col = "darkgreen")
 ```
+
+### Plot ACF dan PACF Setelah Diferensiasi
 ```{r}
-dtgab1_diff <- boxcox_trans[1:58] |> ts()
-# Hitung rata-rata
-mean(dtgab1_diff)
-# Hitung ragam
-var(dtgab1_diff)
+# Cek ACF & ADF setelah differencing
+acf(data_coffee_sub_bc_diff1, main = "ACF setelah First Differencing")
+pacf(data_coffee_sub_bc_diff1, main = "PACF setelah First Differencing")
 ```
+Berdasarkan plot ACF dan PACF setelah first differencing, autokorelasi hanya signifikan pada lag awal dan cepat melemah. Hal ini menunjukkan bahwa data telah menjadi stasioner dalam rataan setelah dilakukan diferensiasi pertama.
 
+### Uji ADF Setelah Diferensiasi
 ```{r}
-library(MASS)
-
-# Pilih lambda hasil Box-Cox
-lambda <- -0.37  
-
-# Pastikan semua data positif
-min_val <- min(data_coffee_sub.ts)
-if(min_val <= 0){
-  data_bc <- data_coffee_sub.ts + abs(min_val) + 0.1
-} else {
-  data_bc <- data_coffee_sub.ts
-}
-
-# Transformasi Box-Cox
-data_bc <- (data_bc^lambda - 1) / lambda
-
-# Differensiasi orde 1
-diff_bc <- diff(data_bc, differences = 1)
-
-
-plot(diff_bc, main = "Diferensiasi box cox", ylab = "Differenced Value", xlab = "Time")
-
-# Plot ACF/PACF
-par(mfrow=c(1,2))
-acf(diff_bc, main="ACF: Box-Cox → Diff")
-pacf(diff_bc, main="PACF: Box-Cox → Diff")
-
-
-# Uji ADF
-adf.test(diff_bc)
-
-# Uji Box-Cox untuk model diff_bc
-index <- seq_along(diff_bc)
-bc <- boxcox(diff_bc+1~index, lambda = seq(-5, 5, 0.01))
-#Nilai Rounded Lambda
-lambda <- bc$x[which.max(bc$y)]
-lambda
-#SK
-bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
-
+adf.test(data_coffee_sub_bc_diff1)
 ```
+Pada uji ADF terlihat bahwa p-value sebesar 0.01 (< 0.05) sehingga hipotesis nol ditolak dan data dinyatakan stasioner.
 
+## Identifikasi Model
 ```{r}
-library(tseries)
-library(MASS)
-length(diff_bc)
-# -----------------------------
-# Bagi data
-gab1 <- diff_bc[1:58] |> ts()
-gab2 <- diff_bc[59:99] |> ts()
+# Model ARIMA(1,1,0)
+fit_arima110 <- Arima(data_coffee_sub.ts, order = c(1, 1, 0), lambda = lambda_opt)
+summary(fit_arima110)
 
-# -----------------------------
-# Uji ADF dan Box-Cox untuk Gab1
-cat("\n### Hasil untuk Gab1 ###\n")
+# Model ARIMA(0,1,1)
+fit_arima011 <- Arima(data_coffee_sub.ts, order = c(0, 1, 1), lambda = lambda_opt)
+summary(fit_arima011)
 
-# Uji ADF
-adf.test(gab1)
+# Model ARIMA(1,1,1)
+fit_arima111 <- Arima(data_coffee_sub.ts, order = c(1, 1, 1), lambda = lambda_opt)
+summary(fit_arima111)
 
-# Uji Box-Cox
-index1 <- seq_along(gab1)
-bc1 <- boxcox(gab1 + 1 ~ index1, lambda = seq(-5, 5, 0.01))
-
-# Nilai lambda optimum (dibulatkan)
-lambda1 <- bc1$x[which.max(bc1$y)]
-cat("Lambda optimum Gab1:", lambda1, "\n")
-
-# Selang kepercayaan 95%
-CI1 <- bc1$x[bc1$y > max(bc1$y) - 1/2 * qchisq(.95, 1)]
-cat("CI 95% Gab1:", range(CI1), "\n")
-
-# -----------------------------
-# Uji ADF dan Box-Cox untuk Gab2
-cat("\n### Hasil untuk Gab2 ###\n")
-
-# Uji ADF
-adf.test(gab2)
-
-# Uji Box-Cox
-index2 <- seq_along(gab2)
-bc2 <- boxcox(gab2 + 1 ~ index2, lambda = seq(-5, 5, 0.01))
-
-# Nilai lambda optimum (dibulatkan)
-lambda2 <- bc2$x[which.max(bc2$y)]
-cat("Lambda optimum Gab2:", lambda2, "\n")
-
-# Selang kepercayaan 95%
-CI2 <- bc2$x[bc2$y > max(bc2$y) - 1/2 * qchisq(.95, 1)]
-cat("CI 95% Gab2:", range(CI2), "\n")
-
+# Bandingkan kriteria AIC, BIC, AICc
+AIC(fit_arima110, fit_arima011, fit_arima111)
+BIC(fit_arima110, fit_arima011, fit_arima111)
 ```
 
-
+Berdasarkan hasil perbandingan nilai AIC, diperoleh bahwa model ARIMA(1,1,0) memiliki nilai AIC sebesar -288.1515, yang lebih kecil dibandingkan dengan model ARIMA(0,1,1) sebesar -287.1119 dan model ARIMA(1,1,1) sebesar -286.1624. Karena kriteria pemilihan model ARIMA didasarkan pada nilai AIC terendah, maka model ARIMA(1,1,0) dipilih sebagai model terbaik di antara ketiga kandidat. Dengan demikian, model ini dianggap lebih efisien dalam menjelaskan data tanpa menambah kompleksitas parameter yang berlebihan.
